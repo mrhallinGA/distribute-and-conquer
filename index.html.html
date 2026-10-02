@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111827" />
+  <title>Distribute & Conquer: The Expression Gauntlet</title>
+  <style>
+:root{
+  --bg:#0b1020;
+  --panel:#121a2f;
+  --panel2:#19233d;
+  --ink:#f8fafc;
+  --muted:#a9b5ca;
+  --red:#d9343a;
+  --red2:#ff5a61;
+  --gold:#f5c451;
+  --green:#3ddc97;
+  --blue:#60a5fa;
+  --border:rgba(255,255,255,.11);
+  --shadow:0 24px 70px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--bg)}
+body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:
+ radial-gradient(circle at 15% 10%,rgba(217,52,58,.18),transparent 30%),
+ radial-gradient(circle at 90% 20%,rgba(96,165,250,.12),transparent 28%),
+ linear-gradient(180deg,#0b1020 0%,#090d18 100%);}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.app-shell{min-height:100vh;display:flex;flex-direction:column}
+.topbar{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,4vw,48px);border-bottom:1px solid var(--border);background:rgba(8,12,24,.78);backdrop-filter:blur(14px);position:sticky;top:0;z-index:20}
+.brand-button{background:none;border:0;color:var(--ink);display:flex;align-items:center;gap:11px;text-align:left;padding:6px}
+.brand-button strong{display:block;font-size:1rem}.brand-button small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}.brand-mark{font-size:1.7rem}
+.top-actions{display:flex;gap:8px}.icon-btn{width:42px;height:42px;border-radius:12px;border:1px solid var(--border);background:var(--panel);color:var(--ink)}
+main{flex:1}.screen{display:none;width:min(1180px,calc(100% - 28px));margin:0 auto;padding:38px 0 56px}.screen.active{display:block}
+.hero-card{position:relative;overflow:hidden;text-align:center;padding:clamp(32px,7vw,74px) clamp(18px,5vw,70px);border:1px solid var(--border);border-radius:28px;background:linear-gradient(145deg,rgba(25,35,61,.96),rgba(14,20,37,.96));box-shadow:var(--shadow)}
+.hero-card:before{content:"";position:absolute;inset:-50% auto auto -12%;width:48%;aspect-ratio:1;border-radius:50%;background:rgba(217,52,58,.11);filter:blur(8px)}
+.hero-shield{font-size:clamp(46px,9vw,92px);filter:drop-shadow(0 8px 20px rgba(0,0,0,.35));animation:float 4s ease-in-out infinite}.eyebrow{letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:var(--gold);font-size:.76rem}.hero-card h1{font-size:clamp(2.4rem,7vw,5.3rem);line-height:.93;margin:10px 0 18px;letter-spacing:-.055em}.hero-card h1 span{color:var(--red2)}
+.subtitle{max-width:760px;margin:0 auto;color:#d6deea;font-size:clamp(1rem,2vw,1.25rem);line-height:1.65}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:650px;margin:30px auto 28px}.hero-stats div,.result-stats div{border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.035);padding:15px}.hero-stats strong,.result-stats strong{font-size:1.45rem;display:block}.hero-stats span,.result-stats span{display:block;color:var(--muted);font-size:.78rem;margin-top:4px}
+.hero-buttons{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}.btn{border:0;border-radius:14px;padding:13px 19px;font-weight:800;transition:transform .16s ease,filter .16s ease}.btn:hover{transform:translateY(-2px);filter:brightness(1.06)}.btn.primary{color:white;background:linear-gradient(135deg,var(--red),#a91824);box-shadow:0 12px 25px rgba(217,52,58,.22)}.btn.secondary{color:var(--ink);background:#26334e;border:1px solid var(--border)}.text-btn{border:0;background:none;color:#cbd5e1;text-decoration:underline;text-underline-offset:3px;margin-top:20px}
+.level-map{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:18px 0 0}.level-chip{min-width:0;border:1px solid var(--border);background:var(--panel);border-radius:14px;padding:12px 8px;text-align:center}.level-chip span{font-size:1.35rem;display:block}.level-chip strong{font-size:.72rem;display:block;margin-top:5px}.level-chip small{font-size:.64rem;color:var(--muted)}.level-chip.boss{border-color:rgba(245,196,81,.35);background:linear-gradient(145deg,#231c24,var(--panel))}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:20px;border:1px solid var(--border);background:var(--panel);border-radius:20px}.hud-main{display:flex;gap:14px;align-items:center}.level-badge{background:rgba(217,52,58,.15);color:#ff9ba0;border:1px solid rgba(217,52,58,.3);padding:9px 12px;border-radius:999px;font-weight:800;font-size:.78rem;white-space:nowrap}.hud h2{margin:0;font-size:1.3rem}.hud p{margin:4px 0 0;color:var(--muted);font-size:.82rem}.hud-stats{display:flex;gap:9px}.hud-stats div{min-width:72px;text-align:center;border:1px solid var(--border);border-radius:12px;padding:8px}.hud-stats span{display:block;color:var(--muted);font-size:.66rem;text-transform:uppercase}.hud-stats strong{display:block;margin-top:2px}
+.progress-wrap{margin:14px 0 20px}.progress-bar{height:9px;background:#1a243d;border-radius:99px;overflow:hidden}.progress-bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--gold));transition:width .3s ease}.progress-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:.75rem;margin-top:7px}
+.battle-grid{display:grid;grid-template-columns:250px 1fr;gap:18px}.mission-card,.question-card{border:1px solid var(--border);background:var(--panel);border-radius:22px}.mission-card{padding:22px;align-self:start;position:sticky;top:92px}.mission-icon{font-size:2rem}.mission-card h3{margin:10px 0 7px}.mission-card p{color:var(--muted);line-height:1.5;font-size:.9rem}.streak-fire{margin-top:20px;border-radius:12px;padding:12px;background:rgba(245,196,81,.08);border:1px solid rgba(245,196,81,.2);color:#f8dda0;font-size:.82rem;line-height:1.45}.timer-wrap{margin-top:12px;border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}.timer-wrap strong{font-size:1.5rem;margin-left:6px}
+.question-card{padding:clamp(24px,5vw,54px);min-height:490px}.question-kicker{color:var(--muted);font-size:.73rem;letter-spacing:.16em;font-weight:800;margin:0;text-align:center}.expression{font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(2rem,5vw,4.1rem);font-weight:700;text-align:center;margin:34px 0 42px;line-height:1.2;word-break:break-word}.answers{display:grid;grid-template-columns:1fr 1fr;gap:13px}.answer-btn{position:relative;text-align:left;padding:18px 18px 18px 54px;border-radius:14px;border:1px solid var(--border);background:#1c2742;color:var(--ink);font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(1.15rem,2.5vw,1.55rem);min-height:68px;transition:.15s}.answer-btn:hover:not(:disabled){border-color:rgba(245,196,81,.55);transform:translateY(-1px);background:#22304e}.answer-btn .choice-key{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:#111a2e;color:var(--muted);font-family:Inter,sans-serif;font-size:.78rem;font-weight:800}.answer-btn.correct{border-color:rgba(61,220,151,.65);background:rgba(61,220,151,.12)}.answer-btn.wrong{border-color:rgba(255,90,97,.7);background:rgba(217,52,58,.13)}.answer-btn:disabled{cursor:default}
+.feedback{margin-top:17px;border-radius:14px;padding:15px 17px;line-height:1.5}.feedback.good{background:rgba(61,220,151,.1);border:1px solid rgba(61,220,151,.3);color:#bcf8dd}.feedback.bad{background:rgba(217,52,58,.1);border:1px solid rgba(217,52,58,.3);color:#ffd0d2}.next-btn{display:block;margin:16px 0 0 auto}.hidden{display:none!important}
+.result-card{max-width:760px;margin:35px auto;text-align:center;border:1px solid var(--border);border-radius:26px;background:var(--panel);padding:clamp(32px,7vw,68px);box-shadow:var(--shadow)}.result-icon{font-size:4rem}.result-card h2{font-size:clamp(2rem,5vw,3.5rem);margin:9px 0 12px}.result-card>p:not(.eyebrow){color:var(--muted);font-size:1.05rem;line-height:1.6}.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:25px 0}.rank-banner{border:1px solid rgba(245,196,81,.3);background:rgba(245,196,81,.07);border-radius:16px;padding:18px;margin:24px auto;max-width:460px}.rank-banner span{display:block;color:var(--gold);font-size:.72rem;letter-spacing:.15em}.rank-banner strong{font-size:1.8rem;display:block;margin-top:5px}.victory-card{background:linear-gradient(150deg,#1b2038,#24171c)}
+.teacher-shell{border:1px solid var(--border);border-radius:24px;background:var(--panel);padding:clamp(18px,4vw,34px)}.teacher-head{display:flex;justify-content:space-between;gap:20px;align-items:start}.teacher-head h2{margin:5px 0 0;font-size:clamp(1.7rem,4vw,2.7rem)}.teacher-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:24px}.settings-card{border:1px solid var(--border);background:#0f172a;border-radius:18px;padding:20px}.settings-card h3{margin-top:0}.settings-card label:not(.check-row){display:block;margin:19px 0;color:#d7deea;font-size:.9rem}.settings-card label>span{float:right;color:var(--gold);font-weight:800}.settings-card input[type="range"]{width:100%;margin-top:10px;accent-color:var(--red)}.select-label select{width:100%;margin-top:9px;background:#1d2943;color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:11px}.check-row{display:flex;gap:10px;align-items:flex-start;margin:18px 0}.check-row input{margin-top:4px;accent-color:var(--red);transform:scale(1.1)}.check-row strong{display:block;font-size:.9rem}.check-row small{display:block;color:var(--muted);line-height:1.35;margin-top:2px}.config-summary{border-radius:12px;background:#18233b;padding:12px;color:var(--muted);font-size:.8rem;line-height:1.5}.sharing-card p{color:var(--muted);font-size:.88rem;line-height:1.5}.sharing-card .btn{width:100%;margin-top:9px}.copy-status{min-height:20px;color:#bff5dd!important}.sharing-card details{margin-top:14px}.sharing-card summary{cursor:pointer;color:#cbd5e1}.sharing-card code{display:block;white-space:pre-wrap;word-break:break-all;margin-top:9px;background:#080d18;border-radius:10px;padding:10px;color:#b8c6dc;font-size:.7rem}.teacher-footer{display:flex;justify-content:space-between;align-items:center;margin-top:18px}.teacher-footer .text-btn{margin:0}
+footer{text-align:center;color:#68758c;font-size:.72rem;padding:20px;border-top:1px solid var(--border)}
+.confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:100;overflow:hidden}.confetti{position:absolute;top:-20px;width:9px;height:14px;border-radius:2px;animation:fall 1.8s linear forwards}.shake{animation:shake .28s linear}.pop{animation:pop .28s ease-out}
+@keyframes float{50%{transform:translateY(-8px)}}@keyframes fall{to{transform:translateY(110vh) rotate(620deg);opacity:.3}}@keyframes shake{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}@keyframes pop{50%{transform:scale(1.025)}}
+@media(max-width:900px){.teacher-grid{grid-template-columns:1fr 1fr}.sharing-card{grid-column:1/-1}.battle-grid{grid-template-columns:1fr}.mission-card{position:static;display:grid;grid-template-columns:auto 1fr;column-gap:14px}.mission-card h3{margin-top:0}.mission-card p,.streak-fire,.timer-wrap{grid-column:2}.level-map{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:650px){.screen{width:min(100% - 18px,1180px);padding-top:18px}.topbar{height:62px;padding:0 10px}.brand-button small{display:none}.hero-card{border-radius:20px}.hero-stats{grid-template-columns:1fr}.hero-stats div{display:flex;justify-content:space-between;align-items:center}.hero-stats span{margin:0}.level-map{grid-template-columns:repeat(2,1fr)}.hud{align-items:flex-start;flex-direction:column}.hud-stats{width:100%}.hud-stats div{flex:1}.progress-meta{gap:10px;flex-direction:column}.answers{grid-template-columns:1fr}.question-card{min-height:auto;padding:24px 15px}.expression{margin:28px 0}.result-stats{grid-template-columns:1fr}.teacher-grid{grid-template-columns:1fr}.sharing-card{grid-column:auto}.teacher-footer{gap:10px;align-items:stretch;flex-direction:column}.teacher-footer .text-btn{order:2}.mission-card{display:block}.mission-card p,.streak-fire,.timer-wrap{grid-column:auto}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+
+  </style>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <button id="homeBtn" class="brand-button" aria-label="Return to game home">
+        <span class="brand-mark">🛡️</span>
+        <span><strong>Distribute & Conquer</strong><small>The Expression Gauntlet</small></span>
+      </button>
+      <div class="top-actions">
+        <button id="soundBtn" class="icon-btn" aria-pressed="false" title="Toggle sound">🔇</button>
+        <button id="fullscreenBtn" class="icon-btn" title="Full screen">⛶</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="homeScreen" class="screen active">
+        <div class="hero-card">
+          <div class="hero-shield">🛡️</div>
+          <p class="eyebrow">SPARTAN ALGEBRA CHALLENGE</p>
+          <h1>Distribute <span>&amp;</span> Conquer</h1>
+          <p class="subtitle">Enter the Expression Gauntlet. Expand. Outsmart the signs. Survive the Rational Rift. Defeat the Like-Term Legion.</p>
+          <div class="hero-stats" aria-label="Game features">
+            <div><strong>96</strong><span>verified questions</span></div>
+            <div><strong>7</strong><span>progressive stages</span></div>
+            <div><strong>0</strong><span>student data required</span></div>
+          </div>
+          <div class="hero-buttons">
+            <button id="startBtn" class="btn primary">⚔️ Enter the Gauntlet</button>
+            <button id="practiceBtn" class="btn secondary">🎯 Quick Practice</button>
+          </div>
+          <button id="teacherBtn" class="text-btn">⚙️ Teacher Setup & Sharing</button>
+        </div>
+
+        <div class="level-map" id="levelMap"></div>
+      </section>
+
+      <section id="gameScreen" class="screen" aria-live="polite">
+        <div class="hud">
+          <div class="hud-main">
+            <div class="level-badge" id="levelBadge">Level 1</div>
+            <div>
+              <h2 id="levelName">Training Grounds</h2>
+              <p id="levelBlurb"></p>
+            </div>
+          </div>
+          <div class="hud-stats">
+            <div><span>Shield</span><strong id="accuracyText">100%</strong></div>
+            <div><span>Streak</span><strong id="streakText">0</strong></div>
+            <div><span>XP</span><strong id="xpText">0</strong></div>
+          </div>
+        </div>
+
+        <div class="progress-wrap" aria-label="Level progress">
+          <div class="progress-bar"><div id="progressFill"></div></div>
+          <div class="progress-meta"><span id="questionCountText">Question 1 of 8</span><span id="masteryText">Mastery target: 85% + 4 streak</span></div>
+        </div>
+
+        <div class="battle-grid">
+          <aside class="mission-card">
+            <div class="mission-icon" id="missionIcon">⚔️</div>
+            <h3>Mission</h3>
+            <p id="missionText">Choose the fully expanded equivalent expression.</p>
+            <div class="streak-fire" id="streakFire">Build a 4-answer streak to prove mastery.</div>
+            <div id="timerWrap" class="timer-wrap hidden"><span>⏱️</span><strong id="timerText">30</strong></div>
+          </aside>
+
+          <section class="question-card">
+            <p class="question-kicker" id="questionKicker">EXPAND THE EXPRESSION</p>
+            <div id="expression" class="expression" aria-label="Expression"></div>
+            <div id="answers" class="answers" role="group" aria-label="Answer choices"></div>
+            <div id="feedback" class="feedback hidden"></div>
+            <button id="nextBtn" class="btn primary next-btn hidden">Continue →</button>
+          </section>
+        </div>
+      </section>
+
+      <section id="levelCompleteScreen" class="screen">
+        <div class="result-card">
+          <div id="resultIcon" class="result-icon">🛡️</div>
+          <p class="eyebrow" id="resultEyebrow">SHIELD EARNED</p>
+          <h2 id="resultTitle">Training Grounds Conquered</h2>
+          <p id="resultMessage"></p>
+          <div class="result-stats">
+            <div><span>Accuracy</span><strong id="resultAccuracy">88%</strong></div>
+            <div><span>Best streak</span><strong id="resultStreak">5</strong></div>
+            <div><span>XP earned</span><strong id="resultXp">800</strong></div>
+          </div>
+          <div class="hero-buttons">
+            <button id="continueLevelBtn" class="btn primary">Next Challenge →</button>
+            <button id="retryLevelBtn" class="btn secondary hidden">Retry Level</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="victoryScreen" class="screen">
+        <div class="result-card victory-card">
+          <div class="result-icon">🏆</div>
+          <p class="eyebrow">GAUNTLET COMPLETE</p>
+          <h2>You Distributed. You Conquered.</h2>
+          <p>The Like-Term Legion has fallen. Your shield held through every sign, fraction, decimal, and disguised factor.</p>
+          <div class="rank-banner"><span>FINAL RANK</span><strong id="finalRank">Shield Commander</strong></div>
+          <div class="result-stats">
+            <div><span>Overall accuracy</span><strong id="finalAccuracy">90%</strong></div>
+            <div><span>Best streak</span><strong id="finalStreak">8</strong></div>
+            <div><span>Total XP</span><strong id="finalXp">5600</strong></div>
+          </div>
+          <div class="hero-buttons">
+            <button id="playAgainBtn" class="btn primary">⚔️ Run It Again</button>
+            <button id="victoryHomeBtn" class="btn secondary">Home</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="teacherScreen" class="screen">
+        <div class="teacher-shell">
+          <div class="teacher-head">
+            <div><p class="eyebrow">TEACHER CONTROL ROOM</p><h2>Set the challenge. Share one link.</h2></div>
+            <button id="closeTeacherBtn" class="icon-btn" aria-label="Close teacher settings">✕</button>
+          </div>
+          <div class="teacher-grid">
+            <div class="settings-card">
+              <h3>Mastery Settings</h3>
+              <label>Questions per regular level <span id="qPerLevelVal">8</span>
+                <input id="qPerLevel" type="range" min="5" max="12" value="8" />
+              </label>
+              <label>Final Boss questions <span id="bossQuestionsVal">10</span>
+                <input id="bossQuestions" type="range" min="6" max="12" value="10" />
+              </label>
+              <label>Accuracy required <span id="masteryVal">85%</span>
+                <input id="mastery" type="range" min="75" max="100" step="5" value="85" />
+              </label>
+              <label>Correct-answer streak <span id="streakVal">4</span>
+                <input id="streakReq" type="range" min="2" max="6" value="4" />
+              </label>
+              <label class="select-label">Optional challenge timer
+                <select id="timerSelect">
+                  <option value="0">Off — mastery over speed</option>
+                  <option value="45">45 seconds</option>
+                  <option value="30">30 seconds</option>
+                  <option value="20">20 seconds</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="settings-card">
+              <h3>Launch Options</h3>
+              <label class="select-label">Starting stage
+                <select id="startLevelSelect"></select>
+              </label>
+              <label class="check-row"><input id="showFeedback" type="checkbox" checked /><span><strong>Show misconception feedback</strong><small>Wrong answers explain the likely error without revealing the correct choice.</small></span></label>
+              <label class="check-row"><input id="shuffleChoices" type="checkbox" checked /><span><strong>Shuffle answer positions</strong><small>Prevents answer-position memorization.</small></span></label>
+              <div class="config-summary" id="configSummary"></div>
+            </div>
+
+            <div class="settings-card sharing-card">
+              <h3>Share With Teachers</h3>
+              <p>Settings travel in the URL. No account, roster, or student information is stored.</p>
+              <button id="copyLinkBtn" class="btn primary">🔗 Copy Student Link</button>
+              <button id="copyEmbedBtn" class="btn secondary">&lt;/&gt; Copy Canvas Embed</button>
+              <p id="copyStatus" class="copy-status" aria-live="polite"></p>
+              <details>
+                <summary>Canvas embed preview</summary>
+                <code id="embedPreview"></code>
+              </details>
+            </div>
+          </div>
+          <div class="teacher-footer">
+            <button id="resetSettingsBtn" class="text-btn">Reset defaults</button>
+            <button id="applySettingsBtn" class="btn primary">Save & Return Home</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>Built for mathematical mastery • Exact rational arithmetic • Keyboard: 1–4 to answer</footer>
+    <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+  </div>
+
+  <script>
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  root.ExpressionEngine = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  class Rational {
+    constructor(n, d = 1) {
+      if (!Number.isInteger(n) || !Number.isInteger(d) || d === 0) {
+        throw new Error(`Rational requires integer numerator/denominator; got ${n}/${d}`);
+      }
+      if (d < 0) { n = -n; d = -d; }
+      const g = gcd(Math.abs(n), Math.abs(d));
+      this.n = n / g;
+      this.d = d / g;
+      Object.freeze(this);
+    }
+    static from(v) {
+      if (v instanceof Rational) return v;
+      if (Number.isInteger(v)) return new Rational(v, 1);
+      if (typeof v === 'string') return Rational.parse(v);
+      throw new Error(`Unsupported rational value: ${v}`);
+    }
+    static parse(s) {
+      s = String(s).trim().replace(/−/g, '-');
+      if (/^-?\d+\/\d+$/.test(s)) {
+        const [n, d] = s.split('/').map(Number);
+        return new Rational(n, d);
+      }
+      if (/^-?\d+(\.\d+)?$/.test(s)) {
+        const neg = s.startsWith('-');
+        if (neg) s = s.slice(1);
+        const [whole, dec = ''] = s.split('.');
+        const d = 10 ** dec.length;
+        const n = Number(whole) * d + Number(dec || 0);
+        return new Rational(neg ? -n : n, d);
+      }
+      throw new Error(`Cannot parse rational: ${s}`);
+    }
+    add(o) { o = Rational.from(o); return new Rational(this.n * o.d + o.n * this.d, this.d * o.d); }
+    sub(o) { o = Rational.from(o); return new Rational(this.n * o.d - o.n * this.d, this.d * o.d); }
+    mul(o) { o = Rational.from(o); return new Rational(this.n * o.n, this.d * o.d); }
+    div(o) { o = Rational.from(o); if (o.n === 0) throw new Error('Division by zero'); return new Rational(this.n * o.d, this.d * o.n); }
+    neg() { return new Rational(-this.n, this.d); }
+    abs() { return new Rational(Math.abs(this.n), this.d); }
+    eq(o) { o = Rational.from(o); return this.n === o.n && this.d === o.d; }
+    isZero() { return this.n === 0; }
+    isOne() { return this.n === this.d; }
+    isNegOne() { return this.n === -this.d; }
+    isInteger() { return this.d === 1; }
+    toNumber() { return this.n / this.d; }
+    key() { return `${this.n}/${this.d}`; }
+  }
+
+  class Linear {
+    constructor(x = new Rational(0), c = new Rational(0)) {
+      this.x = Rational.from(x);
+      this.c = Rational.from(c);
+      Object.freeze(this);
+    }
+    add(o) { return new Linear(this.x.add(o.x), this.c.add(o.c)); }
+    scale(k) { k = Rational.from(k); return new Linear(this.x.mul(k), this.c.mul(k)); }
+    eq(o) { return this.x.eq(o.x) && this.c.eq(o.c); }
+    key() { return `${this.x.key()}|${this.c.key()}`; }
+  }
+
+  function gcd(a, b) {
+    while (b) [a, b] = [b, a % b];
+    return a || 1;
+  }
+
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function pick(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
+  function shuffle(rng, arr) {
+    arr = arr.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  const INT_POS = [1,2,3,4,5,6,7,8,9].map(n => new Rational(n));
+  const INT_NONZERO = [-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8,9].map(n => new Rational(n));
+  const SMALL_NONZERO = [-6,-5,-4,-3,-2,-1,1,2,3,4,5,6].map(n => new Rational(n));
+  const FRACTIONS = [
+    [-1,2],[1,2],[-3,2],[3,2],[-5,2],[5,2],
+    [-1,3],[1,3],[-2,3],[2,3],[-4,3],[4,3],
+    [-1,4],[1,4],[-3,4],[3,4],[-5,4],[5,4],[-7,4],[7,4],
+    [-2,5],[2,5],[-3,5],[3,5],[-4,5],[4,5]
+  ].map(([n,d]) => new Rational(n,d));
+  const DECIMALS = ['-2.5','-1.5','-1.25','-0.75','-0.5','0.5','0.75','1.25','1.5','2.5','3.5'].map(Rational.parse);
+  const RATIONALS = INT_NONZERO.concat(FRACTIONS, DECIMALS);
+
+  function finiteDecimal(r) {
+    let d = r.d;
+    while (d % 2 === 0) d /= 2;
+    while (d % 5 === 0) d /= 5;
+    return d === 1;
+  }
+
+  function decimalString(r) {
+    if (!finiteDecimal(r)) return fractionString(r);
+    const num = r.toNumber();
+    let s = num.toFixed(6).replace(/0+$/,'').replace(/\.$/,'');
+    return s.replace(/-/g, '−');
+  }
+
+  function fractionString(r) {
+    if (r.d === 1) return String(r.n).replace(/-/g, '−');
+    return `${String(r.n).replace(/-/g,'−')}/${r.d}`;
+  }
+
+  function numberString(r, style = 'auto') {
+    r = Rational.from(r);
+    if (style === 'decimal' && finiteDecimal(r)) return decimalString(r);
+    if (style === 'fraction') return fractionString(r);
+    if (r.d === 1) return fractionString(r);
+    return fractionString(r);
+  }
+
+  function signedNumberString(r, style = 'auto') {
+    return numberString(r, style);
+  }
+
+  function formatLinear(expr, variable = 'x', style = 'auto') {
+    const parts = [];
+    const x = expr.x;
+    const c = expr.c;
+    if (!x.isZero()) {
+      let xTerm;
+      if (x.isOne()) xTerm = variable;
+      else if (x.isNegOne()) xTerm = `−${variable}`;
+      else xTerm = `${numberString(x, style)}${variable}`;
+      parts.push(xTerm);
+    }
+    if (!c.isZero()) {
+      const abs = c.abs();
+      const cText = numberString(abs, style);
+      if (parts.length === 0) parts.push(c.n < 0 ? `−${cText}` : cText);
+      else parts.push(c.n < 0 ? `− ${cText}` : `+ ${cText}`);
+    }
+    if (parts.length === 0) return '0';
+    return parts.join(' ');
+  }
+
+  function formatInner(b, c, variable, style) {
+    const xTerm = b.isOne() ? variable : b.isNegOne() ? `−${variable}` : `${numberString(b, style)}${variable}`;
+    const absC = numberString(c.abs(), style);
+    return `${xTerm} ${c.n < 0 ? '−' : '+'} ${absC}`;
+  }
+
+  function formatFactored(q) {
+    const inner = formatInner(q.b, q.c, q.variable, q.inputStyle);
+    const a = numberString(q.a, q.inputStyle);
+    if (q.factorSide === 'left') {
+      if (q.a.isOne()) return `(${inner})`;
+      if (q.a.isNegOne()) return `−(${inner})`;
+      return `${a}(${inner})`;
+    }
+    // Parenthesize the right-hand numerical factor to avoid teaching ambiguous notation like (x+4)-3.
+    if (q.a.isOne()) return `(${inner})(1)`;
+    return `(${inner})(${a})`;
+  }
+
+  function formatBossFactored(q) {
+    const factored = formatFactored(q);
+    const extra = formatLinear(q.extra, q.variable, q.inputStyle);
+    if (q.extraSide === 'left') return `${extra} + ${factored}`;
+    // The boss extra is a single like term. When it is negative, show subtraction
+    // instead of the visually awkward (and instructionally weaker) "+ −3x" form.
+    const isNegative = q.extra.x.n < 0 || q.extra.c.n < 0;
+    if (!isNegative) return `${factored} + ${extra}`;
+    const absExtra = new Linear(q.extra.x.abs(), q.extra.c.abs());
+    return `${factored} − ${formatLinear(absExtra, q.variable, q.inputStyle)}`;
+  }
+
+  function chooseStyle(rng, allowFraction, allowDecimal) {
+    const options = ['fraction'];
+    if (allowDecimal) options.push('decimal');
+    if (!allowFraction && allowDecimal) return 'decimal';
+    return pick(rng, options);
+  }
+
+  function randomFrom(rng, arr, predicate = () => true) {
+    for (let i = 0; i < 50; i++) {
+      const v = pick(rng, arr);
+      if (predicate(v)) return v;
+    }
+    return arr.find(predicate) || arr[0];
+  }
+
+  function levelParams(level, rng) {
+    const variable = pick(rng, ['x','n','m','p']);
+    let a, b, c, factorSide = 'left', inputStyle = 'fraction';
+    switch (level) {
+      case 1:
+        a = pick(rng, [2,3,4,5,6].map(n => new Rational(n)));
+        b = pick(rng, [new Rational(1), new Rational(2), new Rational(3)]);
+        c = pick(rng, [1,2,3,4,5,6,7,8].map(n => new Rational(n)));
+        inputStyle = 'fraction';
+        break;
+      case 2:
+        a = pick(rng, SMALL_NONZERO);
+        b = pick(rng, [new Rational(1),new Rational(2),new Rational(3),new Rational(-1),new Rational(-2),new Rational(-3)]);
+        c = pick(rng, SMALL_NONZERO);
+        inputStyle = 'fraction';
+        break;
+      case 3:
+        a = pick(rng, INT_NONZERO);
+        b = pick(rng, SMALL_NONZERO);
+        c = pick(rng, INT_NONZERO);
+        factorSide = rng() < 0.62 ? 'right' : 'left';
+        inputStyle = 'fraction';
+        break;
+      case 4:
+        a = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 5);
+        b = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 4);
+        c = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 6);
+        factorSide = rng() < 0.5 ? 'left' : 'right';
+        inputStyle = chooseStyle(rng, true, true);
+        break;
+      case 5:
+        a = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 7);
+        b = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 5);
+        c = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 8);
+        factorSide = rng() < 0.5 ? 'left' : 'right';
+        inputStyle = chooseStyle(rng, true, true);
+        break;
+      case 6:
+      default:
+        a = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 9);
+        b = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 6);
+        c = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 10);
+        factorSide = rng() < 0.5 ? 'left' : 'right';
+        inputStyle = chooseStyle(rng, true, true);
+        break;
+    }
+    return { a, b, c, factorSide, variable, inputStyle };
+  }
+
+  function equivalentDistractors(base, correct, q, boss = false) {
+    const a = q.a, b = q.b, c = q.c;
+    const candidates = [];
+    function push(expr, misconception) {
+      if (!expr.eq(correct) && !candidates.some(x => x.expr.eq(expr))) candidates.push({expr, misconception});
+    }
+    const firstOnly = new Linear(a.mul(b), c);
+    const secondOnly = new Linear(b, a.mul(c));
+    const wrongSecondSign = new Linear(a.mul(b), a.mul(c).neg());
+    const absFactor = new Linear(a.abs().mul(b), a.abs().mul(c));
+    const addInstead = new Linear(a.add(b), a.mul(c));
+    const constantAdd = new Linear(a.mul(b), a.add(c));
+    const innerSignFlip = new Linear(a.mul(b), a.mul(c.neg()));
+
+    if (boss) {
+      const e = q.extra;
+      push(firstOnly.add(e), 'Distributed to only one term before combining.');
+      push(secondOnly.add(e), 'Distributed to only one term before combining.');
+      push(wrongSecondSign.add(e), 'A sign changed during distribution.');
+      push(absFactor.add(e), 'The negative factor was treated as positive.');
+      push(base, 'The outside like term was not combined correctly.');
+      push(new Linear(correct.x.add(new Rational(1)), correct.c), 'The like-term coefficients were combined incorrectly.');
+      push(new Linear(correct.x, correct.c.add(new Rational(1))), 'The constant terms were combined incorrectly.');
+      push(new Linear(correct.x.neg(), correct.c), 'The sign of the variable term changed while combining.');
+    } else {
+      push(firstOnly, 'The factor was distributed to only the variable term.');
+      push(secondOnly, 'The factor was distributed to only the constant term.');
+      push(wrongSecondSign, 'The sign of the second product changed.');
+      push(absFactor, 'A negative outside factor was treated as positive.');
+      push(addInstead, 'The factor was added to a coefficient instead of multiplied.');
+      push(constantAdd, 'The factor was added to the constant instead of multiplied.');
+      push(innerSignFlip, 'The sign inside the parentheses was changed before multiplying.');
+      push(new Linear(correct.x.add(a), correct.c), 'An extra factor was added to the variable coefficient.');
+    }
+    // Guaranteed fallbacks, all algebraically distinct from correct.
+    for (let k = 1; candidates.length < 6 && k < 10; k++) {
+      push(new Linear(correct.x.add(new Rational(k)), correct.c), 'The coefficient arithmetic is off.');
+      if (candidates.length < 6) push(new Linear(correct.x, correct.c.add(new Rational(k))), 'The constant arithmetic is off.');
+    }
+    return candidates;
+  }
+
+  function buildQuestion(level, index, rng) {
+    const q = levelParams(level, rng);
+    q.level = level;
+    q.id = `L${level}-${String(index+1).padStart(2,'0')}`;
+    const inner = new Linear(q.b, q.c);
+    const correct = inner.scale(q.a);
+    q.correct = correct;
+    const distractors = equivalentDistractors(inner, correct, q, false);
+    const picked = shuffle(rng, distractors).slice(0, 3);
+    const options = shuffle(rng, [
+      {expr: correct, correct: true, misconception: null},
+      ...picked.map(d => ({...d, correct: false}))
+    ]);
+    q.options = options;
+    q.prompt = formatFactored(q);
+    q.outputStyle = q.inputStyle;
+    verifyQuestion(q);
+    return q;
+  }
+
+  function buildBossQuestion(index, rng) {
+    const q = levelParams(6, rng);
+    q.level = 7;
+    q.id = `BOSS-${String(index+1).padStart(2,'0')}`;
+    // Create a like term that must combine with either the x-term or constant after distribution.
+    const combineVariable = rng() < 0.68;
+    let extra;
+    if (combineVariable) {
+      let ex = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 8);
+      // Occasionally engineer cancellation for an advanced boss item.
+      if (index % 5 === 4) ex = q.a.mul(q.b).neg();
+      extra = new Linear(ex, new Rational(0));
+    } else {
+      let ec = randomFrom(rng, RATIONALS, r => !r.isZero() && Math.abs(r.toNumber()) <= 10);
+      if (index % 5 === 4) ec = q.a.mul(q.c).neg();
+      extra = new Linear(new Rational(0), ec);
+    }
+    q.extra = extra;
+    q.extraSide = rng() < 0.5 ? 'left' : 'right';
+    const distributed = new Linear(q.b, q.c).scale(q.a);
+    const correct = distributed.add(extra);
+    q.correct = correct;
+    const distractors = equivalentDistractors(distributed, correct, q, true);
+    const picked = shuffle(rng, distractors).slice(0, 3);
+    q.options = shuffle(rng, [
+      {expr: correct, correct: true, misconception: null},
+      ...picked.map(d => ({...d, correct: false}))
+    ]);
+    q.prompt = formatBossFactored(q);
+    q.outputStyle = q.inputStyle;
+    verifyQuestion(q);
+    return q;
+  }
+
+  function verifyQuestion(q) {
+    if (!q || !q.correct || !q.options || q.options.length !== 4) throw new Error(`Malformed question ${q && q.id}`);
+    const correctOptions = q.options.filter(o => o.correct);
+    if (correctOptions.length !== 1) throw new Error(`${q.id}: expected exactly one marked correct option`);
+    if (!correctOptions[0].expr.eq(q.correct)) throw new Error(`${q.id}: marked answer does not match algebraic correct answer`);
+    const keys = q.options.map(o => o.expr.key());
+    if (new Set(keys).size !== keys.length) throw new Error(`${q.id}: duplicate/equivalent answer choices`);
+    const recomputed = new Linear(q.b, q.c).scale(q.a).add(q.extra || new Linear());
+    if (!recomputed.eq(q.correct)) throw new Error(`${q.id}: generated answer failed recomputation`);
+    return true;
+  }
+
+  const LEVEL_META = [
+    { id: 1, name: 'Training Grounds', icon: '⚔️', blurb: 'Positive integer factors. Build the distribution habit.' },
+    { id: 2, name: 'Sign Trials', icon: '🛡️', blurb: 'Negatives can appear inside or outside the parentheses.' },
+    { id: 3, name: 'Mirror Gate', icon: '🪞', blurb: 'The numerical factor can appear on either side.' },
+    { id: 4, name: 'Rational Rift', icon: '🌀', blurb: 'Fractions and decimals enter the arena.' },
+    { id: 5, name: 'Chaos Chamber', icon: '🔥', blurb: 'Mixed signs, forms, and rational numbers.' },
+    { id: 6, name: 'Mastery Arena', icon: '🏛️', blurb: 'No predictable pattern. Prove structural understanding.' },
+    { id: 7, name: 'Final Boss: Like-Term Legion', icon: '🐉', blurb: 'Distribute, then combine like terms to finish the expression.' }
+  ];
+
+  function buildQuestionBank(seed = 20261002) {
+    const rng = mulberry32(seed);
+    const bank = {};
+    for (let level = 1; level <= 6; level++) {
+      bank[level] = [];
+      for (let i = 0; i < 14; i++) bank[level].push(buildQuestion(level, i, rng));
+    }
+    bank[7] = [];
+    for (let i = 0; i < 12; i++) bank[7].push(buildBossQuestion(i, rng));
+    // 6*14 + 12 = 96 verified questions.
+    Object.values(bank).flat().forEach(verifyQuestion);
+    return bank;
+  }
+
+  function displayQuestion(q) {
+    return {
+      id: q.id,
+      prompt: q.prompt,
+      options: q.options.map(o => formatLinear(o.expr, q.variable, q.outputStyle)),
+      correctIndex: q.options.findIndex(o => o.correct),
+      misconceptions: q.options.map(o => o.misconception),
+      variable: q.variable,
+      level: q.level
+    };
+  }
+
+  return {
+    Rational, Linear, LEVEL_META,
+    buildQuestionBank, verifyQuestion, displayQuestion,
+    formatLinear, formatFactored, formatBossFactored,
+    mulberry32, shuffle
+  };
+});
+
+  </script>
+  <script>
+(() => {
+  'use strict';
+  const E = window.ExpressionEngine;
+  const BANK = E.buildQuestionBank();
+  const META = E.LEVEL_META;
+
+  const defaults = {
+    q: 8,
+    boss: 10,
+    mastery: 85,
+    streak: 4,
+    timer: 0,
+    start: 1,
+    feedback: true,
+    shuffle: true
+  };
+  let settings = loadSettingsFromUrl();
+  let soundOn = false;
+  let timerHandle = null;
+  let timerRemaining = 0;
+  let mode = 'campaign';
+  let state = freshState();
+
+  const $ = id => document.getElementById(id);
+  const screens = ['homeScreen','gameScreen','levelCompleteScreen','victoryScreen','teacherScreen'];
+
+  function freshState() {
+    return {
+      level: settings.start,
+      levelAsked: 0,
+      levelCorrect: 0,
+      levelStreak: 0,
+      levelBestStreak: 0,
+      levelXp: 0,
+      totalAsked: 0,
+      totalCorrect: 0,
+      totalBestStreak: 0,
+      totalXp: 0,
+      questionQueue: [],
+      current: null,
+      answered: false,
+      recovery: false,
+      completedLevels: new Set()
+    };
+  }
+
+  function loadSettingsFromUrl() {
+    const p = new URLSearchParams(location.search);
+    const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
+    return {
+      q: clamp(Number(p.get('q') || defaults.q),5,12),
+      boss: clamp(Number(p.get('boss') || defaults.boss),6,12),
+      mastery: clamp(Number(p.get('mastery') || defaults.mastery),75,100),
+      streak: clamp(Number(p.get('streak') || defaults.streak),2,6),
+      timer: [0,20,30,45].includes(Number(p.get('timer'))) ? Number(p.get('timer')) : defaults.timer,
+      start: clamp(Number(p.get('start') || defaults.start),1,7),
+      feedback: p.get('feedback') === '0' ? false : defaults.feedback,
+      shuffle: p.get('shuffle') === '0' ? false : defaults.shuffle
+    };
+  }
+
+  function showScreen(id) {
+    screens.forEach(s => $(s).classList.toggle('active', s === id));
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function buildHome() {
+    $('levelMap').innerHTML = META.map(m => `
+      <div class="level-chip ${m.id === 7 ? 'boss':''}">
+        <span>${m.icon}</span><strong>${m.id === 7 ? 'BOSS' : `LEVEL ${m.id}`}</strong><small>${m.name.replace('Final Boss: ','')}</small>
+      </div>`).join('');
+  }
+
+  function startGame(selectedMode='campaign') {
+    mode = selectedMode;
+    state = freshState();
+    if (mode === 'practice') {
+      state.level = Math.min(6, Math.max(1, settings.start));
+    }
+    startLevel(state.level);
+  }
+
+  function startLevel(level) {
+    clearTimer();
+    state.level = level;
+    state.levelAsked = 0;
+    state.levelCorrect = 0;
+    state.levelStreak = 0;
+    state.levelBestStreak = 0;
+    state.levelXp = 0;
+    state.recovery = false;
+    const target = level === 7 ? settings.boss : settings.q;
+    let pool = BANK[level].slice();
+    pool = randomShuffle(pool);
+    state.questionQueue = pool.slice(0, target);
+    while (state.questionQueue.length < target) state.questionQueue.push(...randomShuffle(pool));
+    state.questionQueue = state.questionQueue.slice(0,target);
+    renderLevelHeader();
+    showScreen('gameScreen');
+    nextQuestion();
+  }
+
+  function renderLevelHeader() {
+    const meta = META[state.level - 1];
+    $('levelBadge').textContent = state.level === 7 ? 'FINAL BOSS' : `Level ${state.level}`;
+    $('levelName').textContent = meta.name;
+    $('levelBlurb').textContent = meta.blurb;
+    $('missionIcon').textContent = meta.icon;
+    $('missionText').textContent = state.level === 7
+      ? 'Distribute first, then combine like terms. Choose the fully simplified equivalent expression.'
+      : 'Choose the fully expanded equivalent expression.';
+    $('masteryText').textContent = `Mastery target: ${settings.mastery}% + ${settings.streak} streak`;
+    $('streakFire').textContent = `Build a ${settings.streak}-answer streak to prove mastery.`;
+    $('questionKicker').textContent = state.level === 7 ? 'DISTRIBUTE + COMBINE LIKE TERMS' : 'EXPAND THE EXPRESSION';
+  }
+
+  function nextQuestion() {
+    clearTimer();
+    state.answered = false;
+    $('feedback').className = 'feedback hidden';
+    $('feedback').textContent = '';
+    $('nextBtn').classList.add('hidden');
+
+    if (state.questionQueue.length === 0) {
+      resolveLevelEnd();
+      return;
+    }
+    state.current = state.questionQueue.shift();
+    const d = E.displayQuestion(state.current);
+    $('expression').textContent = d.prompt;
+    let opts = d.options.map((text,i) => ({
+      text,
+      originalIndex:i,
+      correct:i === d.correctIndex,
+      misconception:d.misconceptions[i]
+    }));
+    if (settings.shuffle) opts = randomShuffle(opts);
+    $('answers').innerHTML = opts.map((o,i) => `
+      <button class="answer-btn" data-index="${i}" data-correct="${o.correct ? '1':'0'}" data-original="${o.originalIndex}">
+        <span class="choice-key">${i+1}</span>${escapeHtml(o.text)}
+      </button>`).join('');
+    [...$('answers').querySelectorAll('.answer-btn')].forEach(btn => btn.addEventListener('click', () => answer(btn, opts[Number(btn.dataset.index)])));
+    updateHud();
+    if (settings.timer > 0) startTimer(settings.timer);
+  }
+
+  function answer(btn, opt, timedOut=false) {
+    if (state.answered) return;
+    state.answered = true;
+    clearTimer();
+    state.levelAsked++;
+    state.totalAsked++;
+    const isCorrect = !timedOut && opt && opt.correct;
+    const allBtns = [...$('answers').querySelectorAll('.answer-btn')];
+    allBtns.forEach(b => { b.disabled = true; if (b.dataset.correct === '1' && isCorrect) b.classList.add('correct'); });
+
+    if (isCorrect) {
+      btn.classList.add('correct');
+      state.levelCorrect++; state.totalCorrect++;
+      state.levelStreak++;
+      state.levelBestStreak = Math.max(state.levelBestStreak,state.levelStreak);
+      state.totalBestStreak = Math.max(state.totalBestStreak,state.levelStreak);
+      const gain = 100 + Math.min(100, state.levelStreak * 10) + (state.level === 7 ? 50 : 0);
+      state.levelXp += gain; state.totalXp += gain;
+      if (settings.feedback) showFeedback(true, `Shield held! ${gain} XP. ${state.levelStreak >= settings.streak ? 'Mastery streak achieved.' : 'Keep the streak alive.'}`);
+      pulse($('expression'));
+      tone('good');
+    } else {
+      if (btn) btn.classList.add('wrong');
+      state.levelStreak = 0;
+      if (settings.feedback) {
+        let message = timedOut ? 'Time expired. Reset, then distribute the factor to every term.' : (opt.misconception || 'Check that the factor multiplies every term and keep each sign attached to its number.');
+        showFeedback(false, message + ' Try the next one using both products before simplifying.');
+      }
+      $('question-card')?.classList?.add('shake');
+      setTimeout(()=>document.querySelector('.question-card')?.classList.remove('shake'),300);
+      tone('bad');
+    }
+    updateHud();
+    $('nextBtn').classList.remove('hidden');
+    $('nextBtn').focus();
+  }
+
+  function showFeedback(good, text) {
+    $('feedback').className = `feedback ${good ? 'good':'bad'}`;
+    $('feedback').innerHTML = `<strong>${good ? '✓ Correct':'↺ Recalibrate'}</strong> ${escapeHtml(text)}`;
+  }
+
+  function resolveLevelEnd() {
+    const accuracy = state.levelAsked ? Math.round(state.levelCorrect / state.levelAsked * 100) : 0;
+    const mastered = accuracy >= settings.mastery && state.levelBestStreak >= settings.streak;
+    if (!mastered && !state.recovery && state.levelAsked < 20) {
+      state.recovery = true;
+      const need = Math.min(5, 20 - state.levelAsked);
+      state.questionQueue = randomShuffle(BANK[state.level]).slice(0, need);
+      $('streakFire').textContent = `Recovery round: prove ${settings.mastery}% accuracy and a ${settings.streak}-answer streak.`;
+      nextQuestion();
+      return;
+    }
+    showLevelResult(mastered, accuracy);
+  }
+
+  function showLevelResult(mastered, accuracy) {
+    clearTimer();
+    $('resultAccuracy').textContent = `${accuracy}%`;
+    $('resultStreak').textContent = state.levelBestStreak;
+    $('resultXp').textContent = state.levelXp.toLocaleString();
+    $('retryLevelBtn').classList.toggle('hidden', mastered);
+    $('continueLevelBtn').classList.toggle('hidden', !mastered);
+
+    if (mastered) {
+      state.completedLevels.add(state.level);
+      $('resultIcon').textContent = state.level === 7 ? '🏆' : '🛡️';
+      $('resultEyebrow').textContent = state.level === 7 ? 'BOSS DEFEATED' : 'SHIELD EARNED';
+      $('resultTitle').textContent = `${META[state.level-1].name} Conquered`;
+      $('resultMessage').textContent = state.level === 7
+        ? 'You distributed and combined like terms under full pressure. The Like-Term Legion is defeated.'
+        : `Mastery verified: ${accuracy}% accuracy with a best streak of ${state.levelBestStreak}.`;
+      $('continueLevelBtn').textContent = state.level === 7 ? 'Claim Victory →' : 'Next Challenge →';
+      confetti(state.level === 7 ? 70 : 28);
+      tone('win');
+    } else {
+      $('resultIcon').textContent = '🛠️';
+      $('resultEyebrow').textContent = 'TRAINING CONTINUES';
+      $('resultTitle').textContent = 'Shield Not Yet Earned';
+      $('resultMessage').textContent = `You finished with ${accuracy}% accuracy and a best streak of ${state.levelBestStreak}. The gate requires ${settings.mastery}% and a ${settings.streak}-answer streak. Retry with a fresh set.`;
+    }
+    showScreen('levelCompleteScreen');
+  }
+
+  function continueAfterLevel() {
+    if (mode === 'practice') { showVictory(true); return; }
+    if (state.level >= 7) { showVictory(false); return; }
+    startLevel(state.level + 1);
+  }
+
+  function showVictory(practice=false) {
+    const accuracy = state.totalAsked ? Math.round(state.totalCorrect/state.totalAsked*100) : 0;
+    $('finalAccuracy').textContent = `${accuracy}%`;
+    $('finalStreak').textContent = state.totalBestStreak;
+    $('finalXp').textContent = state.totalXp.toLocaleString();
+    let rank = 'Shield Bearer';
+    if (accuracy >= 95 && state.totalBestStreak >= 8) rank = 'Gauntlet Champion';
+    else if (accuracy >= 90) rank = 'Shield Commander';
+    else if (accuracy >= 85) rank = 'Expression Vanguard';
+    $('finalRank').textContent = practice ? 'Practice Victor' : rank;
+    confetti(90); tone('win');
+    showScreen('victoryScreen');
+  }
+
+  function updateHud() {
+    const asked = state.levelAsked;
+    const target = state.level === 7 ? settings.boss : settings.q;
+    const totalThisRound = Math.max(target, asked + state.questionQueue.length);
+    const acc = asked ? Math.round(state.levelCorrect/asked*100) : 100;
+    $('accuracyText').textContent = `${acc}%`;
+    $('streakText').textContent = state.levelStreak;
+    $('xpText').textContent = state.totalXp.toLocaleString();
+    $('questionCountText').textContent = state.recovery ? `Recovery question ${asked + 1}` : `Question ${Math.min(asked+1,target)} of ${target}`;
+    $('progressFill').style.width = `${Math.min(100, (asked/Math.max(1,totalThisRound))*100)}%`;
+  }
+
+  function startTimer(seconds) {
+    timerRemaining = seconds;
+    $('timerWrap').classList.remove('hidden');
+    $('timerText').textContent = timerRemaining;
+    timerHandle = setInterval(() => {
+      timerRemaining--;
+      $('timerText').textContent = timerRemaining;
+      if (timerRemaining <= 0) {
+        clearTimer();
+        answer(null, null, true);
+      }
+    },1000);
+  }
+  function clearTimer() {
+    if (timerHandle) clearInterval(timerHandle);
+    timerHandle = null;
+    $('timerWrap').classList.add('hidden');
+  }
+
+  function randomShuffle(arr) {
+    arr = arr.slice();
+    for (let i=arr.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+    return arr;
+  }
+
+  function pulse(el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+  function escapeHtml(s){ return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+  function tone(type) {
+    if (!soundOn) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type='sine'; o.frequency.value = type==='good'?620:type==='win'?740:180;
+      g.gain.setValueAtTime(.05,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.16);
+      o.start(); o.stop(ctx.currentTime+.17);
+    } catch(e) {}
+  }
+
+  function confetti(count) {
+    const layer = $('confettiLayer');
+    const colors=['#d9343a','#f5c451','#60a5fa','#3ddc97','#ffffff'];
+    for (let i=0;i<count;i++) {
+      const piece=document.createElement('i'); piece.className='confetti';
+      piece.style.left=`${Math.random()*100}%`; piece.style.background=colors[i%colors.length]; piece.style.animationDelay=`${Math.random()*.45}s`; piece.style.transform=`rotate(${Math.random()*360}deg)`;
+      layer.appendChild(piece); setTimeout(()=>piece.remove(),2400);
+    }
+  }
+
+  function populateTeacher() {
+    $('qPerLevel').value=settings.q; $('bossQuestions').value=settings.boss; $('mastery').value=settings.mastery; $('streakReq').value=settings.streak; $('timerSelect').value=settings.timer;
+    $('showFeedback').checked=settings.feedback; $('shuffleChoices').checked=settings.shuffle;
+    $('startLevelSelect').innerHTML=META.map(m=>`<option value="${m.id}">${m.id===7?'Boss':`Level ${m.id}`}: ${m.name}</option>`).join('');
+    $('startLevelSelect').value=settings.start;
+    refreshTeacherLabels();
+  }
+
+  function refreshTeacherLabels() {
+    $('qPerLevelVal').textContent=$('qPerLevel').value;
+    $('bossQuestionsVal').textContent=$('bossQuestions').value;
+    $('masteryVal').textContent=`${$('mastery').value}%`;
+    $('streakVal').textContent=$('streakReq').value;
+    const total = (7-Number($('startLevelSelect').value)) * Number($('qPerLevel').value) + Number($('bossQuestions').value);
+    $('configSummary').innerHTML=`Default campaign from this starting point: <strong>${Math.max(Number($('bossQuestions').value),total)}</strong> scored questions before any recovery rounds. Mastery is verified separately at each stage.`;
+    $('embedPreview').textContent=makeEmbed(makeShareUrl(readTeacherForm()));
+  }
+
+  function readTeacherForm() {
+    return {
+      q:Number($('qPerLevel').value), boss:Number($('bossQuestions').value), mastery:Number($('mastery').value), streak:Number($('streakReq').value), timer:Number($('timerSelect').value), start:Number($('startLevelSelect').value), feedback:$('showFeedback').checked, shuffle:$('shuffleChoices').checked
+    };
+  }
+
+  function makeShareUrl(s=settings) {
+    const u=new URL(location.href); u.search=''; u.hash='';
+    const p=u.searchParams;
+    p.set('q',s.q); p.set('boss',s.boss); p.set('mastery',s.mastery); p.set('streak',s.streak); p.set('timer',s.timer); p.set('start',s.start);
+    if (!s.feedback) p.set('feedback','0');
+    if (!s.shuffle) p.set('shuffle','0');
+    return u.toString();
+  }
+  function makeEmbed(url){ return `<iframe src="${url}" width="100%" height="900" style="border:0;" loading="lazy" allow="fullscreen" title="Distribute & Conquer: The Expression Gauntlet"></iframe>`; }
+
+  async function copyText(text, success) {
+    try { await navigator.clipboard.writeText(text); $('copyStatus').textContent=success; }
+    catch(e) { $('copyStatus').textContent='Copy was blocked by this browser. Select the preview text and copy it manually.'; }
+  }
+
+  function applySettings() {
+    settings=readTeacherForm();
+    const url=makeShareUrl(settings);
+    history.replaceState(null,'',url);
+    $('copyStatus').textContent='';
+    showScreen('homeScreen');
+  }
+
+  // Events
+  $('startBtn').addEventListener('click',()=>startGame('campaign'));
+  $('practiceBtn').addEventListener('click',()=>startGame('practice'));
+  $('nextBtn').addEventListener('click',nextQuestion);
+  $('continueLevelBtn').addEventListener('click',continueAfterLevel);
+  $('retryLevelBtn').addEventListener('click',()=>startLevel(state.level));
+  $('playAgainBtn').addEventListener('click',()=>startGame('campaign'));
+  $('victoryHomeBtn').addEventListener('click',()=>showScreen('homeScreen'));
+  $('homeBtn').addEventListener('click',()=>{clearTimer();showScreen('homeScreen')});
+  $('teacherBtn').addEventListener('click',()=>{populateTeacher();showScreen('teacherScreen')});
+  $('closeTeacherBtn').addEventListener('click',()=>showScreen('homeScreen'));
+  $('applySettingsBtn').addEventListener('click',applySettings);
+  $('resetSettingsBtn').addEventListener('click',()=>{settings={...defaults};populateTeacher();});
+  ['qPerLevel','bossQuestions','mastery','streakReq','timerSelect','startLevelSelect','showFeedback','shuffleChoices'].forEach(id=>$(id).addEventListener('input',refreshTeacherLabels));
+  $('copyLinkBtn').addEventListener('click',()=>copyText(makeShareUrl(readTeacherForm()),'Student link copied.'));
+  $('copyEmbedBtn').addEventListener('click',()=>copyText(makeEmbed(makeShareUrl(readTeacherForm())),'Canvas embed code copied.'));
+  $('soundBtn').addEventListener('click',()=>{soundOn=!soundOn;$('soundBtn').textContent=soundOn?'🔊':'🔇';$('soundBtn').setAttribute('aria-pressed',String(soundOn));});
+  $('fullscreenBtn').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch(e){}});
+  document.addEventListener('keydown',e=>{
+    if (!$('gameScreen').classList.contains('active') || state.answered) return;
+    const n=Number(e.key); if(n>=1&&n<=4){const btn=$('answers').querySelectorAll('.answer-btn')[n-1]; if(btn)btn.click();}
+  });
+
+  buildHome(); populateTeacher(); showScreen('homeScreen');
+})();
+
+  </script>
+</body>
+</html>
